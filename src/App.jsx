@@ -1,121 +1,102 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
+import { useEffect, useState } from 'react'
 import './App.css'
 
+const pages = [
+  {
+    path: '/adicionar-remedios',
+    title: 'Adicionar Remédios',
+    description: 'Cadastre e organize os medicamentos que você utiliza.',
+  },
+  {
+    path: '/adicionar-incompatibilidades',
+    title: 'Adicionar Incompatibilidades',
+    description: 'Registre combinações de medicamentos que devem ser evitadas.',
+  },
+  {
+    path: '/testar-compatibilidade',
+    title: 'Testar Compatibilidade',
+    description: 'Confira se os medicamentos cadastrados podem ser usados juntos.',
+  },
+]
+
 function App() {
-  const [count, setCount] = useState(0)
+  const [currentPath, setCurrentPath] = useState(() => window.location.pathname)
+  const currentPage = pages.find((page) => page.path === currentPath)
+
+  useEffect(() => {
+    function handlePopState() {
+      setCurrentPath(window.location.pathname)
+    }
+
+    window.addEventListener('popstate', handlePopState)
+    return () => window.removeEventListener('popstate', handlePopState)
+  }, [])
+
+  useEffect(() => {
+    document.title = currentPage ? `${currentPage.title} | MediCheck` : 'MediCheck'
+  }, [currentPage])
+
+  function navigate(path) {
+    window.history.pushState({}, '', path)
+    setCurrentPath(path)
+  }
+
+  function goHome() {
+    window.history.pushState({}, '', '/')
+    setCurrentPath('/')
+  }
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
+    <main className="app-shell">
+      <header className="topbar">
+        <a className="brand" href="/" onClick={(event) => {
+          event.preventDefault()
+          goHome()
+        }}>
+          <span className="brand-mark" aria-hidden="true">M</span>
+          <span>MediCheck</span>
+        </a>
+        <span className="topbar-label">Sua saúde, com mais cuidado</span>
+      </header>
+
+      {currentPage ? (
+        <section className="destination" aria-labelledby="page-title">
+          <span className="eyebrow">MEDICHECK</span>
+          <h1 id="page-title">{currentPage.title}</h1>
+          <p>{currentPage.description}</p>
+          <button className="back-button" type="button" onClick={goHome}>
+            Voltar ao início
+          </button>
+        </section>
+      ) : (
+        <section className="dashboard" aria-labelledby="welcome-title">
+          <div className="welcome">
+            <span className="eyebrow">BEM-VINDO AO MEDICHECK</span>
+            <h1 id="welcome-title">Cuidado mais simples,<br />decisões mais seguras.</h1>
+            <p>Escolha o que você deseja fazer:</p>
+          </div>
+
+          <nav className="actions" aria-label="Ações do MediCheck">
+            {pages.map((page, index) => (
+              <button
+                className="action-card"
+                key={page.path}
+                type="button"
+                onClick={() => navigate(page.path)}
+              >
+                <span className="action-number">0{index + 1}</span>
+                <span className="action-title">{page.title}</span>
+                <span className="action-arrow" aria-hidden="true">→</span>
+              </button>
+            ))}
+          </nav>
+
+          <p className="disclaimer">
+            O MediCheck é um apoio informativo e não substitui a orientação de um profissional de saúde.
           </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
-
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+        </section>
+      )}
+    </main>
   )
 }
 
