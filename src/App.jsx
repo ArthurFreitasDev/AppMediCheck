@@ -1,21 +1,24 @@
 import { useEffect, useState } from 'react'
 import './App.css'
+import AddIncompatibilitiesPage from './pages/AddIncompatibilitiesPage'
+import AddMedicinesPage from './pages/AddMedicinesPage'
+import TestCompatibilityPage from './pages/TestCompatibilityPage'
 
 const pages = [
   {
     path: '/adicionar-remedios',
     title: 'Adicionar Remédios',
-    description: 'Cadastre e organize os medicamentos que você utiliza.',
+    Component: AddMedicinesPage,
   },
   {
     path: '/adicionar-incompatibilidades',
     title: 'Adicionar Incompatibilidades',
-    description: 'Registre combinações de medicamentos que devem ser evitadas.',
+    Component: AddIncompatibilitiesPage,
   },
   {
     path: '/testar-compatibilidade',
     title: 'Testar Compatibilidade',
-    description: 'Confira se os medicamentos cadastrados podem ser usados juntos.',
+    Component: TestCompatibilityPage,
   },
 ]
 
@@ -46,6 +49,8 @@ function App() {
     setCurrentPath('/')
   }
 
+  const PageComponent = currentPage?.Component
+
   return (
     <main className="app-shell">
       <header className="topbar">
@@ -60,14 +65,7 @@ function App() {
       </header>
 
       {currentPage ? (
-        <section className="destination" aria-labelledby="page-title">
-          <span className="eyebrow">MEDICHECK</span>
-          <h1 id="page-title">{currentPage.title}</h1>
-          <p>{currentPage.description}</p>
-          <button className="back-button" type="button" onClick={goHome}>
-            Voltar ao início
-          </button>
-        </section>
+        <PageComponent onBack={goHome} />
       ) : (
         <section className="dashboard" aria-labelledby="welcome-title">
           <div className="welcome">
