@@ -170,6 +170,106 @@ h1 {
   line-height: 1.6;
 }
 
+.medicine-list {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.medicine-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-h);
+}
+
+.medicine-list li:last-child {
+  border-bottom: 0;
+}
+
+.medicine-list li span:last-child {
+  color: var(--text);
+}
+
+.medicine-suggestions,
+.selected-medicines {
+  display: grid;
+  gap: 8px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.medicine-suggestion {
+  width: 100%;
+  padding: 11px 12px;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-h);
+  background: var(--card-bg);
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+
+.medicine-suggestion:hover {
+  border-color: var(--accent);
+}
+
+.medicine-suggestion span,
+.medicine-dosage {
+  color: var(--text);
+}
+
+.suggestion-empty {
+  padding: 10px 0;
+  color: var(--text);
+  font-size: 14px;
+}
+
+.selection-title {
+  margin: 24px 0 0;
+  color: var(--text-h);
+  font-size: 15px;
+}
+
+.selected-medicines li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-h);
+}
+
+.remove-medicine {
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  color: var(--text-h);
+  background: var(--card-bg);
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+}
+
+.remove-medicine:hover {
+  border-color: var(--accent);
+}
+
+.form-error {
+  color: #a12626 !important;
+  font-size: 14px !important;
+}
+
 .field {
   display: grid;
   gap: 8px;
@@ -192,6 +292,40 @@ h1 {
 }
 
 .field input:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.submit-button {
+  margin-top: 22px;
+  padding: 13px 20px;
+  border: 0;
+  border-radius: 9px;
+  color: #fff;
+  background: var(--accent);
+  cursor: pointer;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  transition: background 160ms ease;
+}
+
+.submit-button:hover {
+  background: var(--accent-hover);
+}
+
+.submit-button:disabled {
+  cursor: default;
+  opacity: 1;
+}
+
+.submit-button:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.medicine-suggestion:focus-visible,
+.remove-medicine:focus-visible {
   outline: 3px solid var(--accent);
   outline-offset: 2px;
 }
