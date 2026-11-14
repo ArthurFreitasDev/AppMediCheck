@@ -1,9 +1,13 @@
-from fastapi import FastAPI, HTTPException, status
-from pydantic import BaseModel
+import hashlib
+import hmac
+import secrets
+
 from fastapi import FastAPI, HTTPException, Query, status
+from pydantic import BaseModel, Field
+from sqlalchemy.exc import IntegrityError
 
 from database import Base, Session, engine
-from models import Medicamento, Incompatibilidade
+from models import Incompatibilidade, Medicamento, Usuario
 
 
 app = FastAPI()
@@ -22,6 +26,18 @@ class IncompatibilidadePayload(BaseModel):
 
 class TesteCompatibilidadePayload(BaseModel):
     medicamentos_ids: list[int]
+
+class UsuarioPayload(BaseModel):
+    id: int
+    email: str
+    senha: str
+
+class LoginPayload(BaseModel):
+    email: str
+    senha: str
+
+
+
 
 
 @app.get("/medicamentos", status_code=status.HTTP_200_OK)
@@ -61,6 +77,51 @@ def adicionarIncompatibilidade(payload: IncompatibilidadePayload):
         db.commit()
         db.refresh(medicamento)
         return medicamento
+
+@app.post("/usuarios", status_code=status.HTTP_201_CREATED)
+def AdicionarUsuario(payload: UsuarioPayload):
+    with Session() as db:
+        usuario_existente = db.query(Usuario).filter(
+            Usuario.email == payload.email
+        ).first()
+        if usuario_existente:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Este e-mail já está cadastrado.",
+            )
+
+        usuario = Usuario(
+            email=payload.email,
+            senha=payload.senha
+        )
+        db.add(usuario)
+        try:
+            db.commit()
+            db.refresh(usuario)
+        except IntegrityError as error:
+            db.rollback()
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Este e-mail já está cadastrado.",
+            ) from error
+
+        return {"id": usuario.id, "email": usuario.email}
+
+@app.post("/login")
+def login(payload: LoginPayload):
+    with Session() as db:
+        usuario = db.query(Usuario).filter(
+            Usuario.email == payload.email,
+            Usuario.senha == payload.senha
+        ).first()
+
+        if not usuario:
+            raise HTTPException(
+                status_code=401,
+                detail="E-mail ou senha incorretos"
+            )
+
+        return {"mensagem": "Login realizado", "email": usuario.email}
 
 @app.post("/incompatibilidades/consultar")
 def consultar_incompatibilidade(payload: TesteCompatibilidadePayload):

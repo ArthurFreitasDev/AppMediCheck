@@ -15,3 +15,9 @@ class Incompatibilidade(Base):
 
     id = Column(Integer, primary_key=True)
     numero = Column(Integer)
+
+class Usuario(Base):
+    __tablename__ = "usuario"
+    id = Column(Integer, primary_key=True)
+    email = Column(String, unique=True)
+    senha = Column(String)
