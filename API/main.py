@@ -86,6 +86,8 @@ def adicionarIncompatibilidade(payload: IncompatibilidadePayload):
                 )
             )
         db.commit()
+        db.commit()
+        db.refresh(incompatibilidade)
         return incompatibilidade
 
 @app.get("/incompatibilidades", status_code=status.HTTP_200_OK)
