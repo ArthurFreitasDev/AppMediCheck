@@ -219,3 +219,16 @@ def test_login_com_senha_incorreta(client):
         json={"email": "naoexiste@example.com", "senha": "senha-errada"},
     )
     assert resposta.status_code == 401
+
+
+def test_consultar_1_e_23_nao_encontra_combinacao_1_2_3(client):
+    client.post(
+        "/incompatibilidades",
+        json={"id": 0, "numero": 123, "medicamentos_ids": [1, 2, 3]},
+    )
+    consulta = client.post(
+        "/incompatibilidades/consultar",
+        json={"medicamentos_ids": [1, 23]},
+    )
+
+    assert consulta.json() == {"incompatibilidades": []}

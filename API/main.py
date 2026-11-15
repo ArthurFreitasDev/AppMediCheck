@@ -23,7 +23,7 @@ class MedicamentosPayload(BaseModel):
 class IncompatibilidadePayload(BaseModel):
     id: int
     numero: int
-    medicamentos_ids: list[int] = Field(default_factory=list)
+    medicamentos_ids: list[int] = Field(min_length=2)
 
 class TesteCompatibilidadePayload(BaseModel):
     medicamentos_ids: list[int] = Field(min_length=1)
@@ -168,12 +168,18 @@ def login(payload: LoginPayload):
 
 @app.post("/incompatibilidades/consultar")
 def consultar_incompatibilidade(payload: TesteCompatibilidadePayload):
-    ids = sorted(payload.medicamentos_ids)
-    numero = int("".join(str(id) for id in ids))
-
+    selecionados = set(payload.medicamentos_ids)
     with Session() as db:
-        encontradas = db.query(Incompatibilidade).filter(
-            Incompatibilidade.numero == numero
-        ).all()
+        grupos = {}
+        for assoc in db.query(IncompatibilidadeMedicamento).all():
+            grupos.setdefault(assoc.incompatibilidade_id, set()).add(
+                assoc.medicamento_id
+            )
 
+        ids = [inc_id for inc_id, meds in grupos.items() if meds == selecionados]
+        encontradas = []
+        if ids:
+            encontradas = db.query(Incompatibilidade).filter(
+                Incompatibilidade.id.in_(ids)
+            ).all()
         return {"incompatibilidades": encontradas}
