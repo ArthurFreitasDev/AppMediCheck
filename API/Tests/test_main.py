@@ -106,7 +106,7 @@ def test_consultar_incompatibilidade_independente_da_ordem_dos_ids(client):
     numero = int("".join(str(id) for id in sorted(ids)))
     cadastro = client.post(
         "/incompatibilidades",
-        json={"id": 0, "numero": numero},
+        json={"id": 0, "numero": numero, "medicamentos_ids": ids},
     )
     assert cadastro.status_code == 201
 
@@ -182,7 +182,7 @@ def test_consultar_sem_ids_retorna_erro_de_validacao(client):
 def test_consultar_ids_12_e_3_nao_encontra_numero_123(client):
     cadastro = client.post(
         "/incompatibilidades",
-        json={"id": 0, "numero": 123},
+        json={"id": 0, "numero": 123, "medicamentos_ids": [1, 2, 3]},
     )
     assert cadastro.status_code == 201
 
