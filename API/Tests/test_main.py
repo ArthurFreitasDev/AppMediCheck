@@ -80,6 +80,18 @@ def test_buscar_medicamento_por_nome(client):
     assert [item["nome"] for item in resposta.json()] == ["Paracetamol"]
 
 
+def test_buscar_medicamento_por_prefixo(client):
+    client.post(
+        "/medicamentos",
+        json={"id": 0, "nome": "Dipirona", "dosagem": "500 mg"},
+    )
+
+    resposta = client.get("/medicamentos/buscar", params={"nome": "dipi"})
+
+    assert resposta.status_code == 200
+    assert [item["nome"] for item in resposta.json()] == ["Dipirona"]
+
+
 def test_consultar_incompatibilidade_independente_da_ordem_dos_ids(client):
     medicamentos = []
     for nome in ("Medicamento A", "Medicamento B"):
@@ -117,6 +129,70 @@ def test_consultar_combinacao_sem_incompatibilidade(client):
 
     assert resposta.status_code == 200
     assert resposta.json() == {"incompatibilidades": []}
+
+
+def test_listar_incompatibilidades_cadastradas_com_medicamentos(client):
+    medicamentos = []
+    for nome in ("Dipirona", "Paracetamol"):
+        resposta = client.post(
+            "/medicamentos",
+            json={"id": 0, "nome": nome, "dosagem": "500 mg"},
+        )
+        assert resposta.status_code == 201
+        medicamentos.append(resposta.json())
+
+    ids = [medicamento["id"] for medicamento in medicamentos]
+    cadastro = client.post(
+        "/incompatibilidades",
+        json={
+            "id": 0,
+            "numero": int("".join(str(id) for id in sorted(ids))),
+            "medicamentos_ids": ids,
+        },
+    )
+    assert cadastro.status_code == 201
+
+    resposta = client.get("/incompatibilidades")
+
+    assert resposta.status_code == 200
+    incompatibilidades = resposta.json()
+    assert len(incompatibilidades) == 1
+    assert incompatibilidades[0]["numero"] == int(
+        "".join(str(id) for id in sorted(ids))
+    )
+    assert incompatibilidades[0]["medicamentos"] == [
+        {
+            "id": medicamento["id"],
+            "nome": medicamento["nome"],
+            "dosagem": medicamento["dosagem"],
+        }
+        for medicamento in medicamentos
+    ]
+
+
+def test_consultar_sem_ids_retorna_erro_de_validacao(client):
+    resposta = client.post(
+        "/incompatibilidades/consultar",
+        json={"medicamentos_ids": []},
+    )
+
+    assert resposta.status_code == 422
+
+
+def test_consultar_ids_12_e_3_nao_encontra_numero_123(client):
+    cadastro = client.post(
+        "/incompatibilidades",
+        json={"id": 0, "numero": 123},
+    )
+    assert cadastro.status_code == 201
+
+    consulta = client.post(
+        "/incompatibilidades/consultar",
+        json={"medicamentos_ids": [12, 3]},
+    )
+
+    assert consulta.status_code == 200
+    assert consulta.json() == {"incompatibilidades": []}
 
 
 def test_cadastro_e_login(client):

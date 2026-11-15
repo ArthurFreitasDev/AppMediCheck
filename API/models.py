@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Column, ForeignKey, Integer, String
 
 from database import Base
 
@@ -15,6 +15,16 @@ class Incompatibilidade(Base):
 
     id = Column(Integer, primary_key=True)
     numero = Column(Integer)
+
+class IncompatibilidadeMedicamento(Base):
+    __tablename__ = "incompatibilidade_medicamento"
+
+    incompatibilidade_id = Column(
+        Integer, ForeignKey("incompatibilidade.id"), primary_key=True
+    )
+    medicamento_id = Column(
+        Integer, ForeignKey("medicamento.id"), primary_key=True
+    )
 
 class Usuario(Base):
     __tablename__ = "usuario"

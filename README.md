@@ -205,24 +205,24 @@ O projeto **não utiliza** APIs ou serviços externos até o momento. Essa integ
 
 ## 8. Testes automatizados
 
-Os testes ficam em `API/Tests/test.py` e usam `pytest` com o `TestClient` do FastAPI, que chama a API sem precisar subir o servidor.
+Os testes da API ficam em `API/Tests/test_main.py` e usam `pytest` com o `TestClient` do FastAPI. Os testes da interface ficam em `src/App.test.jsx` e usam Vitest com Testing Library; não é necessário iniciar os servidores para executá-los.
 
-| Teste | O que verifica |
-|---|---|
-| `test_cadastro_e_login` | Cadastro retorna `201`; login com a mesma senha retorna `200` e o e-mail do usuário |
-| `test_login_com_senha_incorreta` | Login com credenciais inexistentes retorna `401` |
+Os testes de interface cobrem os CT01–CT12 (cadastro e busca de medicamentos, seleção/cadastro de incompatibilidades, consulta, remoção e navegação). Os testes da API cobrem cadastro e busca, além dos CT13–CT14: validação de consulta sem IDs (HTTP `422`) e consulta dos IDs `[12, 3]` sem correspondência para o número `123`.
 
-**Como executar** (a partir da pasta raiz do projeto):
+**Como executar** (a partir da pasta raiz do projeto, após instalar as dependências):
 
 ```bash
-# Linux / macOS
-PYTHONPATH=API python -m pytest API/Tests/test.py -v
+# Interface (Windows PowerShell, Linux ou macOS)
+npm test
 
-# Windows (PowerShell)
-$env:PYTHONPATH="API"; python -m pytest API/Tests/test.py -v
+# API (Windows PowerShell)
+.\.venv\Scripts\python.exe -m pytest API/Tests/test_main.py -v
+
+# API (Linux / macOS)
+PYTHONPATH=API python -m pytest API/Tests/test_main.py -v
 ```
 
-> **Pendência:** ampliar a cobertura para medicamentos, incompatibilidades, validações e regras de negócio, e usar um banco separado (por exemplo, SQLite em memória) definido por `DATABASE_URL` para os testes não alterarem o banco de desenvolvimento.
+Para instalar as dependências da interface, execute `npm install`. Os testes de API usam um banco SQLite temporário por teste; para instalar as dependências da API, consulte a seção de instalação abaixo.
 
 ## 9. Instalação e execução
 
@@ -286,6 +286,10 @@ Abra o endereço mostrado no terminal (normalmente <http://localhost:5173>). Man
 ```bash
 PYTHONPATH=API python -m pytest API/Tests/test.py -v
 ```
+
+### Iniciar API e interface juntos (Windows)
+
+Depois de instalar as dependências da API e do front-end, execute `iniciar-medicheck.bat` na raiz do projeto. O arquivo abre uma janela para a API e outra para a interface. Acesse <http://localhost:5173>; a documentação da API fica em <http://127.0.0.1:8000/docs>.
 
 ### Comandos úteis
 

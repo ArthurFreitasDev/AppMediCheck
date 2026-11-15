@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy.exc import IntegrityError
 
 from database import Base, Session, engine
-from models import Incompatibilidade, Medicamento, Usuario
+from models import Incompatibilidade, IncompatibilidadeMedicamento, Medicamento, Usuario
 
 
 app = FastAPI()
@@ -23,9 +23,10 @@ class MedicamentosPayload(BaseModel):
 class IncompatibilidadePayload(BaseModel):
     id: int
     numero: int
+    medicamentos_ids: list[int] = Field(default_factory=list)
 
 class TesteCompatibilidadePayload(BaseModel):
-    medicamentos_ids: list[int]
+    medicamentos_ids: list[int] = Field(min_length=1)
 
 class UsuarioPayload(BaseModel):
     id: int
@@ -64,19 +65,61 @@ def adicionarMedicamento(playload: MedicamentosPayload):
 def buscarMedicamento(nome: str = Query(min_length=1)):
     with Session() as db:
         return(
-            db.query(Medicamento).filter(Medicamento.nome.like(f"%{nome}")).all()
+            db.query(Medicamento).filter(Medicamento.nome.ilike(f"%{nome}%")).all()
         )
 
 @app.post("/incompatibilidades", status_code=status.HTTP_201_CREATED)
 def adicionarIncompatibilidade(payload: IncompatibilidadePayload):
     with Session() as db:
-        medicamento = Incompatibilidade(
+        incompatibilidade = Incompatibilidade(
             numero=payload.numero
         )
-        db.add(medicamento)
+        db.add(incompatibilidade)
         db.commit()
-        db.refresh(medicamento)
-        return medicamento
+        db.refresh(incompatibilidade)
+
+        for medicamento_id in sorted(set(payload.medicamentos_ids)):
+            db.add(
+                IncompatibilidadeMedicamento(
+                    incompatibilidade_id=incompatibilidade.id,
+                    medicamento_id=medicamento_id,
+                )
+            )
+        db.commit()
+        return incompatibilidade
+
+@app.get("/incompatibilidades", status_code=status.HTTP_200_OK)
+def listar_incompatibilidades():
+    with Session() as db:
+        incompatibilidades = db.query(Incompatibilidade).all()
+        associacoes = db.query(IncompatibilidadeMedicamento).all()
+        medicamentos = {
+            medicamento.id: medicamento
+            for medicamento in db.query(Medicamento).all()
+        }
+
+        medicamentos_por_incompatibilidade = {}
+        for associacao in associacoes:
+            medicamento = medicamentos.get(associacao.medicamento_id)
+            if medicamento is not None:
+                medicamentos_por_incompatibilidade.setdefault(
+                    associacao.incompatibilidade_id, []
+                ).append({
+                    "id": medicamento.id,
+                    "nome": medicamento.nome,
+                    "dosagem": medicamento.dosagem,
+                })
+
+        return [
+            {
+                "id": incompatibilidade.id,
+                "numero": incompatibilidade.numero,
+                "medicamentos": medicamentos_por_incompatibilidade.get(
+                    incompatibilidade.id, []
+                ),
+            }
+            for incompatibilidade in incompatibilidades
+        ]
 
 @app.post("/usuarios", status_code=status.HTTP_201_CREATED)
 def AdicionarUsuario(payload: UsuarioPayload):

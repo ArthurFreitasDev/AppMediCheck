@@ -11,7 +11,24 @@ function AddIncompatibilitiesPage({ onBack }) {
   const [salvando, setSalvando] = useState(false)
   const [erroBusca, setErroBusca] = useState('')
   const [erroCadastro, setErroCadastro] = useState('')
+  const [erroLista, setErroLista] = useState('')
   const [sucessoCadastro, setSucessoCadastro] = useState('')
+
+  useEffect(() => {
+    async function carregarIncompatibilidades() {
+      try {
+        const resposta = await fetch(`${API_URL}/incompatibilidades`)
+        if (!resposta.ok) {
+          throw new Error('Não foi possível carregar as incompatibilidades cadastradas.')
+        }
+        setIncompatibilidades(await resposta.json())
+      } catch {
+        setErroLista('Não foi possível carregar as incompatibilidades. Verifique a conexão com a API.')
+      }
+    }
+
+    carregarIncompatibilidades()
+  }, [])
 
   useEffect(() => {
     const nome = busca.trim()
@@ -98,7 +115,11 @@ function AddIncompatibilitiesPage({ onBack }) {
       const resposta = await fetch(`${API_URL}/incompatibilidades`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: 0, numero }),
+        body: JSON.stringify({
+          id: 0,
+          numero,
+          medicamentos_ids: idsOrdenados,
+        }),
       })
 
       const resultado = await resposta.json()
@@ -108,7 +129,12 @@ function AddIncompatibilitiesPage({ onBack }) {
 
       setIncompatibilidades((atuais) => [
         ...atuais,
-        { ...resultado, medicamentos: [...medicamentosSelecionados] },
+        {
+          ...resultado,
+          id: resultado.id ?? numero,
+          numero: resultado.numero ?? numero,
+          medicamentos: [...medicamentosSelecionados],
+        },
       ])
       setMedicamentosSelecionados([])
       setBusca('')
@@ -208,21 +234,24 @@ function AddIncompatibilitiesPage({ onBack }) {
 
         <section className="page-panel" aria-labelledby="incompatibility-list-title">
           <h2 id="incompatibility-list-title">Incompatibilidades registradas</h2>
+          {erroLista && <p className="form-error" role="alert">{erroLista}</p>}
           {incompatibilidades.length > 0 ? (
             <ul className="medicine-list">
               {incompatibilidades.map((incompatibilidade) => (
                 <li key={incompatibilidade.id}>
                   <span>
-                    {incompatibilidade.medicamentos.map((medicamento) => (
-                      `${medicamento.nome} (ID ${medicamento.id})`
-                    )).join(', ')}
+                    {incompatibilidade.medicamentos?.length
+                      ? incompatibilidade.medicamentos.map((medicamento) => (
+                        `${medicamento.nome} (ID ${medicamento.id})`
+                      )).join(', ')
+                      : 'Combinação cadastrada'}
                   </span>
                   <span>ID: {incompatibilidade.numero}</span>
                 </li>
               ))}
             </ul>
           ) : (
-            <p>As incompatibilidades adicionadas nesta sessão aparecerão aqui.</p>
+            <p>Não há incompatibilidades cadastradas.</p>
           )}
         </section>
       </div>
